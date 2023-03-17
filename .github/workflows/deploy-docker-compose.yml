@@ -1,0 +1,25 @@
+name: Deploy Docker Compose
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Pull and deploy Docker Compose
+        env:
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+        run: |
+          scp docker-compose.yml $REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH
+          ssh $REMOTE_USER@$REMOTE_HOST "cd $REMOTE_PATH && docker-compose pull && docker-compose up -d"
